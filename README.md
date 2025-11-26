@@ -2,7 +2,7 @@
 
 The longer title should likely be `"The beauty of pure functions and streams"`.
 
-Demo: [[[beauty-of-f.netlify.app](https://beyond-f.netlify.app/)](https://beauty-of-f.netlify.app/)](https://beyond-f.netlify.app/)
+Demo: [beyond-f.netlify.app](https://beyond-f.netlify.app/)
 
 ## History
 
