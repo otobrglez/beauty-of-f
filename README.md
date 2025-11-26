@@ -4,17 +4,21 @@ Longer title should likely be `"The beauty of pure functions and streams"`.
 
 Demo: [beauty-of-f.netlify.app](https://beauty-of-f.netlify.app/)
 
+## History
+
+> One of the Morse code systems was invented in the United States by American artist and inventor Samuel F.B. Morse during the 1830s for electrical telegraphy. A variant called the International Morse Code was devised by a conference of European nations in 1851 to account for letters with diacritic marks
+
 ## The theory of Morse Code
 
 Please read the [Morse code](https://en.wikipedia.org/wiki/Morse_code) on Wikipedia.
 
 ![Learning Morse Code](./morse.png)
 
-## Development and examples
+# Examples
 
 This presentation uses [just] build system and [scala-cli] to build and run examples.
 
-## Encoding
+## 1. Encoding
 
 Example in the plain and simple Scala 3: [`MorseEncode.scala`](./src/MorseEncode.scala)
 
@@ -93,9 +97,8 @@ just serve-js
 # Deployment
 
 ```bash
-just deploy # w/ netlify
+just deploy
 ```
 
 [just]: https://github.com/casey/just
-
 [scala-cli]: https://scala-cli.virtuslab.org/
