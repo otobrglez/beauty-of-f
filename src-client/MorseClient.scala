@@ -24,13 +24,13 @@ object MorseClient:
         )
     )
 
-  // Configuration for Human Input
-  val Wpm      = 10.0
-  val UnitTime = 1.2 / Wpm // ~0.12s
+  // Configuration matching server's Config
+  val Wpm      = 12.0      // MUST match server's wpm
+  val UnitTime = 1.2 / Wpm // ~0.1s per unit at 12 WPM
 
-  // Thresholds
-  // Short noise filter: < 0.5 unit (very short clicks ignored)
-  val NoiseThreshold = UnitTime * 0.5
+  // Thresholds based on server's unit timing
+  // Short noise filter: < 0.4 unit (filter out very short noise)
+  val NoiseThreshold = UnitTime * 0.4
 
   // Dot vs Dash:
   // Dot should be ~1 unit. Dash ~3 units.
@@ -38,14 +38,15 @@ object MorseClient:
   val DotDashThreshold = UnitTime * 2.0
 
   // Letter Gap:
-  // Standard is 3 units. We use 3.5 to allow slow intra-char spacing.
-  val LetterGapThreshold = UnitTime * 3.5
+  // Standard is 3 units. We use 2.5 to be more forgiving
+  val LetterGapThreshold = UnitTime * 2.5
 
   // Word Gap:
-  val WordGapThreshold = UnitTime * 7.0
+  // Standard is 7 units. We use 6 to be more forgiving
+  val WordGapThreshold = UnitTime * 6.0
 
   val TargetFreq = 600
-  val Threshold  = 0.03
+  val Threshold  = 0.02 // Lower threshold for better sensitivity
 
   // State
   var isListening                         = false
@@ -56,6 +57,7 @@ object MorseClient:
   var lastChangeTime                      = 0.0
   var currentSymbol                       = ""
   var lastDecodedSpace                    = false
+  var silenceStartTime                    = 0.0 // Track silence start separately
 
   def startListening(): Unit =
     if isListening then return
@@ -74,11 +76,11 @@ object MorseClient:
         val filter = audioContext.createBiquadFilter()
         filter.`type` = "bandpass"
         filter.frequency.value = TargetFreq
-        filter.Q.value = 10
+        filter.Q.value = 15 // Narrower band for better selectivity
 
         analyser = audioContext.createAnalyser()
         analyser.fftSize = 512
-        analyser.smoothingTimeConstant = 0.2
+        analyser.smoothingTimeConstant = 0.85 // More smoothing for stable detection
 
         source.connect(filter)
         filter.connect(analyser)
@@ -86,9 +88,10 @@ object MorseClient:
         dataArray = new js.typedarray.Uint8Array(analyser.frequencyBinCount)
 
         lastChangeTime = Date.now()
+        silenceStartTime = Date.now() // Initialize silence tracking
 
         val state = document.getElementById("state")
-        if state != null then state.textContent = "Listening... (Whistle 600Hz)"
+        if state != null then state.textContent = s"Listening... (600Hz at ${Wpm.toInt} WPM)"
 
         loop()
       }
@@ -115,34 +118,46 @@ object MorseClient:
       // State Changed
       if isSignalOn then
         // ON -> OFF (Tone ended)
-        if duration < NoiseThreshold then
+        val toneDuration = (now - lastChangeTime) / 1000.0
+        if toneDuration < NoiseThreshold then
           // Too short, likely noise. Ignore this signal entirely.
-          // But we must be careful: we just treated a 'blip' as signal.
-          // Ideally we should rollback state, but here we just ignore adding symbol.
-          console.log(s"Noise ignored: ${duration}s")
-        else if duration < DotDashThreshold then
+          console.log(f"Noise ignored: ${toneDuration}%.3fs")
+        else if toneDuration < DotDashThreshold then
           currentSymbol += "."
           updateDebug(currentSymbol)
         else
           currentSymbol += "-"
           updateDebug(currentSymbol)
+
+        silenceStartTime = now // Start tracking silence
       else
         // OFF -> ON (Silence ended)
-        lastDecodedSpace = false
+        val silenceDuration = (now - silenceStartTime) / 1000.0
+
+        // Check if we should decode the previous symbol
+        if currentSymbol.nonEmpty && silenceDuration > LetterGapThreshold then decodeCurrentSymbol()
+
+        // Check for word gap
+        if silenceDuration > WordGapThreshold then
+          appendOutput(" ")
+          lastDecodedSpace = true
+        else lastDecodedSpace = false
 
       isSignalOn = signalNow
       lastChangeTime = now
     else
-      // No state change
-      if !isSignalOn then
-        // Silence duration check
-        if currentSymbol.nonEmpty && duration > LetterGapThreshold then
-          decodeCurrentSymbol()
-        // Do NOT reset lastChangeTime. Silence continues.
+    // No state change
+    if !isSignalOn then
+      // Silence duration check
+      val silenceDuration = (now - silenceStartTime) / 1000.0
 
-        if !lastDecodedSpace && duration > WordGapThreshold then
-          appendOutput(" ")
-          lastDecodedSpace = true
+      if currentSymbol.nonEmpty && silenceDuration > LetterGapThreshold then
+        decodeCurrentSymbol()
+        lastDecodedSpace = true // Prevent immediate word gap
+
+      if !lastDecodedSpace && silenceDuration > WordGapThreshold then
+        appendOutput(" ")
+        lastDecodedSpace = true
 
   lazy val ReverseMorse = MORSE.map((k, v) => (v, k))
 
@@ -150,11 +165,11 @@ object MorseClient:
     ReverseMorse.get(currentSymbol) match
       case Some(char) =>
         appendOutput(char.toString)
-      case None =>
-        // Handle invalid symbol
+        console.log(s"Decoded: '$currentSymbol' -> '$char'")
+      case None       =>
+        // Handle invalid symbol - show it in brackets
+        appendOutput(s"[$currentSymbol]")
         console.warn(s"Invalid symbol sequence: $currentSymbol")
-    // Optionally print nothing or a placeholder like '*' to indicate error
-    // appendOutput("?")
 
     currentSymbol = ""
     updateDebug("")
@@ -163,9 +178,11 @@ object MorseClient:
     val display = document.getElementById("decoded-text")
     if display != null then
       display.textContent += str
-  // Auto-scroll
-  // display.scrollTop = display.scrollHeight
+      // Auto-scroll if element supports it
+      display.asInstanceOf[js.Dynamic].scrollTop = display.asInstanceOf[js.Dynamic].scrollHeight
 
   def updateDebug(str: String): Unit =
     val stateEl = document.getElementById("state")
-    if stateEl != null then stateEl.innerText = s"Signal: ${if isSignalOn then "ON" else "OFF"} | Current: $str"
+    if stateEl != null then
+      val wpmInfo = s"${Wpm.toInt} WPM"
+      stateEl.innerText = s"Signal: ${if isSignalOn then "ON" else "OFF"} | Current: $str | $wpmInfo"
