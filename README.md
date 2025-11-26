@@ -2,6 +2,8 @@
 
 Longer title should likely be `"The beauty of pure functions and streams"`.
 
+Demo: [beauty-of-f.netlify.app](https://beauty-of-f.netlify.app/)
+
 ## The theory of Morse Code
 
 Please read the [Morse code](https://en.wikipedia.org/wiki/Morse_code) on Wikipedia.
@@ -75,8 +77,24 @@ just encode-play "SOS SOS RUBY"
 # [ hopefully sound ]
 ```
 
-### Encode and play with SDK
+### Encode and play with Java SDK
 
+```bash
+just play-play "SOS SOS RUBY"
+```
+
+## UI
+
+```bash
+just build-js
+just serve-js
+```
+
+# Deployment
+
+```bash
+just deploy # w/ netlify
+```
 
 [just]: https://github.com/casey/just
 
