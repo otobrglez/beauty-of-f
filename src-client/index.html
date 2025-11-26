@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>beauty-of-f</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style lang="css">
+        body {
+            font-family: sans-serif;
+            font-size: 14pt;
+            padding: 10px;
+        }
+
+        input, p {
+            font-size: 16pt;
+        }
+
+        #app {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #state {
+            font-size: 16pt;
+        }
+
+        #decoded-text {
+            font-size: 24pt;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <h1>beauty-of-f(x)</h1>
+    <p id="state">Press the listen button and the app will start listening to your microphone.</p>
+    <p>
+        <input type="button" id="listen" value="🎤 Listen!"/>
+    </p>
+
+    <div id="decoded-text"></div>
+
+</div>
+<script src="morse-client.js?t=1"></script>
+</body>
+</html>

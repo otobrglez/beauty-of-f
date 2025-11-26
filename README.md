@@ -49,6 +49,35 @@ just say "SOS SOS RUBY"
 # [ sound ]
 ```
 
+## Encoding to sound
+
+We encode with [Pulse-code modulation (PCM)](https://en.wikipedia.org/wiki/Pulse-code_modulation) using [
+`javax.sound.sampled.*`](https://docs.oracle.com/javase/8/docs/api/javax/sound/sampled/package-summary.html)
+
+### Encode into a WAV file
+
+```bash
+just encode-sound "SOS SOS RUBY"
+
+# OUTPUT: ... --- ...   ... --- ...   .-. ..- -... -.--
+# FILE: /Users/oto/Projects/beauty-of-f/output.wav
+```
+
+### Encode and play with `afplay`
+
+We'll encode and then play with OSX [`afplay` - Audio File Play.](https://ss64.com/mac/afplay.html)
+
+```bash
+just encode-play "SOS SOS RUBY"
+
+# OUTPUT: ... --- ...   ... --- ...   .-. ..- -... -.--
+# FILE: /Users/oto/Projects/beauty-of-f/output-play.wav
+# [ hopefully sound ]
+```
+
+### Encode and play with SDK
+
+
 [just]: https://github.com/casey/just
 
 [scala-cli]: https://scala-cli.virtuslab.org/

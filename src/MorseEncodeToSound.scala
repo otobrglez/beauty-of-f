@@ -1,3 +1,5 @@
+//> using platform jvm
+
 import java.io.*
 import java.nio.file.{Files, Path}
 import javax.sound.sampled.*
@@ -44,7 +46,7 @@ def writeSilence(os: OutputStream, units: Int): Unit =
   (0 until totalSamples).foreach: _ =>
     os.write(0); os.write(0)
 
-def writePCM(pcm: Array[Byte], path: Path) =
+private def writePCM(pcm: Array[Byte], path: Path) =
   Files.deleteIfExists(path)
 
   val format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, Config.sampleRate, 16, 1, 2, Config.sampleRate, false)
@@ -53,11 +55,39 @@ def writePCM(pcm: Array[Byte], path: Path) =
 
   AudioSystem.write(ais, AudioFileFormat.Type.WAVE, path.toFile)
 
+private def playPCM(pcm: Array[Byte]): Unit =
+  val format = new AudioFormat(
+    AudioFormat.Encoding.PCM_SIGNED,
+    Config.sampleRate,
+    16,   // bits per sample
+    1,    // channels (mono)
+    2,    // frame size (bytes per sample * channels)
+    Config.sampleRate,
+    false // little-endian
+  )
+
+  val info = new DataLine.Info(classOf[SourceDataLine], format)
+  val line = AudioSystem.getLine(info).asInstanceOf[SourceDataLine]
+
+  try
+    line.open(format)
+    line.start()
+    line.write(pcm, 0, pcm.length)
+    line.drain()
+  finally
+    line.stop()
+    line.close()
+
 @main def morseEncodeToSoundApp(input: String, output: String = "output.waw"): Unit =
   val outputFile = Path.of(output)
-  println(s"INPUT: $input")
+
   println(s"OUTPUT: ${morseEncode(input).map(_.getOrElse(" ")).mkString(" ")}")
-  println(s"OUTPUT FILE: ${outputFile.toAbsolutePath}")
+  println(s"FILE: ${outputFile.toAbsolutePath}")
 
   val pcm = generatePCM(input)
   writePCM(pcm, outputFile)
+
+@main def morseEncodeToSoundPlayApp(input: String): Unit =
+  println(s"OUTPUT: ${morseEncode(input).map(_.getOrElse(" ")).mkString(" ")}")
+  val pcm = generatePCM(input)
+  playPCM(pcm)

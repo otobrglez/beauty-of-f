@@ -1,3 +1,4 @@
+//> using platform jvm
 //> using dep dev.zio::zio:2.1.22
 //> using dep dev.zio::zio-streams:2.1.22
 

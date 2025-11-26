@@ -1,4 +1,9 @@
+dist/
+node_modules/
+
+netlify.toml
 .envrc
+
 
 .bsp
 .idea
@@ -17,3 +22,6 @@ devenv.local.yaml
 
 # pre-commit
 .pre-commit-config.yaml
+
+# Local Netlify folder
+.netlify

@@ -1,3 +1,5 @@
+//> using platform jvm
+
 def morseEncode(input: String) =
   input.map(MORSE.get)
 

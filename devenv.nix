@@ -20,6 +20,13 @@ in
     jdk.package = pkgs-unstable.jdk25_headless;
   };
 
+  languages.javascript = {
+      enable = true;
+      package = pkgs-unstable.nodejs_24;
+      yarn.enable = true;
+      yarn.install.enable = true;
+  };
+
   env = {
     JAVA_OPTS="--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED ";
     SBT_OPTS="--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED ";
