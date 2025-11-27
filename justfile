@@ -1,9 +1,8 @@
 jvm_version := "25"
 default_text := "SOS SOS SOS"
 
-# voice := "Cellos"
-
-voice := "Alex"
+voice := "Cellos"
+# voice := "Alex"
 
 clean: clean-js
     rm -rf *.wav encoded.txt

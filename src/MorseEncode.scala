@@ -1,7 +1,7 @@
 //> using platform jvm
 
-def morseEncode(input: String) =
-  input.map(MORSE.get)
+def morseEncode(input: String) = 
+  input.map(c => MORSE.get(c))
 
 @main def morseEncodeApp(input: String) =
   morseEncode(input).foreach:
